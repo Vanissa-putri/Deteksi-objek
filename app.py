@@ -21,11 +21,12 @@ BG_IMAGE = "assets/water_bg.jpg"
 HERO_IMAGE = "assets/botol_air.jpeg"
 
 # ==============================
-# ADD CSS (DARK/LIGHT MODE + BG)
+# CSS DYNAMIC MODE
 # ==============================
 def add_css(dark_mode=False):
-    text_color = "#f9f9f9" if dark_mode else "#0e1b2b"
-    box_color = "rgba(40, 40, 40, 0.8)" if dark_mode else "rgba(255,255,255,0.9)"
+    text_color = "#f5f5f5" if dark_mode else "#0e1b2b"
+    box_color = "rgba(25, 25, 25, 0.8)" if dark_mode else "rgba(255,255,255,0.9)"
+    overlay = "rgba(0,0,0,0.5)" if dark_mode else "rgba(255,255,255,0.3)"
 
     if os.path.exists(BG_IMAGE):
         with open(BG_IMAGE, "rb") as f:
@@ -37,7 +38,7 @@ def add_css(dark_mode=False):
     st.markdown(f"""
     <style>
         .stApp {{
-            background-image: {bg_image};
+            background-image: linear-gradient({overlay}, {overlay}), {bg_image};
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -53,23 +54,38 @@ def add_css(dark_mode=False):
             font-weight: bold;
             font-size: 14px;
             margin-right: 6px;
-            box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.25);
         }}
         .whatsapp {{ background-color: #25d366; color: white; }}
         .gmail {{ background-color: #d93025; color: white; }}
         .hero {{
             text-align: center;
             margin-top: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+        }}
+        .hero img {{
+            border-radius: 15px;
+            width: 50%;
+            opacity: 0.95;
         }}
         .card {{
             background-color: {box_color};
-            padding: 15px;
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }}
+        .footer {{
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 40px;
+            color: {text_color};
+        }}
+        .stProgress > div > div {{
+            background-color: #00BFFF;
         }}
     </style>
     """, unsafe_allow_html=True)
+
 
 # ==============================
 # LOGO
@@ -91,14 +107,16 @@ def generate_logo(size=150):
     buffer.seek(0)
     return buffer
 
+
 # ==============================
-# LOAD MODEL (CACHE)
+# LOAD MODELS (CACHE)
 # ==============================
 @st.cache_resource
 def load_models():
     yolo = YOLO(YOLO_MODEL_PATH) if os.path.exists(YOLO_MODEL_PATH) else None
     keras_model = tf.keras.models.load_model(KERAS_MODEL_PATH) if os.path.exists(KERAS_MODEL_PATH) else None
     return yolo, keras_model
+
 
 # ==============================
 # UTILITIES
@@ -111,6 +129,7 @@ def image_to_bytes(img):
 def download_link(img, filename="detection_result.png"):
     b64 = base64.b64encode(image_to_bytes(img)).decode()
     return f'<a href="data:file/png;base64,{b64}" download="{filename}" class="contact-btn gmail">⬇ Download Result</a>'
+
 
 # ==============================
 # MAIN APP
@@ -127,11 +146,8 @@ def main():
     st.sidebar.markdown("---")
     st.sidebar.title("🎯 Application Mode")
     mode = st.sidebar.radio("Choose Function:", ["Object Detection (YOLO)", "Image Classification"])
-    st.sidebar.title("📌 How to Use")
-    if lang == "English":
-        st.sidebar.write("1. Choose mode\n2. Upload JPG/PNG image\n3. Wait for result")
-    else:
-        st.sidebar.write("1. Pilih mode\n2. Upload gambar JPG/PNG\n3. Tunggu hasil muncul")
+    st.sidebar.title("📘 How to Use")
+    st.sidebar.write("1️⃣ Pilih mode\n\n2️⃣ Upload gambar JPG/PNG\n\n3️⃣ Tunggu hasilnya muncul")
 
     # Header
     col1, col2 = st.columns([1, 8])
@@ -146,10 +162,10 @@ def main():
         <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
     """, unsafe_allow_html=True)
 
-    # Hero Section (botol air)
+    # Hero Section (smaller image)
     if os.path.exists(HERO_IMAGE):
         st.markdown("<div class='hero'>", unsafe_allow_html=True)
-        st.image(HERO_IMAGE, caption="WaterVision — Smart Vision for Every Drop 💧", use_container_width=True)
+        st.image(HERO_IMAGE, caption="WaterVision — Smart Vision for Every Drop 💧")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Upload Section
@@ -162,8 +178,8 @@ def main():
         st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
         progress = st.progress(0)
-        for i in range(0, 101, 15):
-            time.sleep(0.05)
+        for i in range(0, 101, 20):
+            time.sleep(0.04)
             progress.progress(i)
 
         yolo, classifier = load_models()
@@ -178,7 +194,7 @@ def main():
                     st.image(result_img, use_container_width=True)
                     st.markdown(download_link(result_img), unsafe_allow_html=True)
             else:
-                st.error("YOLO model not found!" if lang == "English" else "Model YOLO tidak ditemukan!")
+                st.error("⚠️ YOLO model not found!" if lang == "English" else "⚠️ Model YOLO tidak ditemukan!")
 
         else:
             st.subheader("🧠 Classification Result" if lang == "English" else "🧠 Hasil Klasifikasi Gambar")
@@ -194,19 +210,19 @@ def main():
                 else:
                     st.success(f"✅ Kelas terdeteksi: **{class_idx}** (probabilitas {conf:.2%})")
             else:
-                st.error("Keras model not found!" if lang == "English" else "Model Keras tidak ditemukan!")
+                st.error("⚠️ Keras model not found!" if lang == "English" else "⚠️ Model Keras tidak ditemukan!")
 
         progress.progress(100)
         st.success("✅ Done!" if lang == "English" else "✅ Selesai!")
 
         if st.button("🔄 Reset" if lang == "English" else "🔄 Reset Gambar"):
             st.experimental_rerun()
-
     else:
         st.info("Please upload an image first." if lang == "English" else "Silakan unggah gambar terlebih dahulu.")
 
     st.markdown("---")
-    st.markdown("© 2025 WaterVision — Powered by AI & Deep Learning")
+    st.markdown("<div class='footer'>© 2025 WaterVision — Powered by AI & Deep Learning</div>", unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
