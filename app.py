@@ -17,8 +17,8 @@ YOLO_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 4.pt"
 KERAS_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 2.h5"
 WHATSAPP_NUMBER = "6282245357681"
 EMAIL_WATERVISION = "watervision@gmail.com"
-BG_IMAGE = "assets/water_bg.jpg"
-HERO_IMAGE = "assets/botol_air.png"
+BG_IMAGE = "assets/water_bg.png"
+HERO_IMAGE = "assets/botol_air.jpeg"
 
 # ==============================
 # ADD CSS (DARK/LIGHT MODE + BG)
