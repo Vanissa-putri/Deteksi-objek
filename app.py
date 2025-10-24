@@ -99,7 +99,7 @@ def add_custom_css():
         }}
         .highlight-box {{
             text-align:center;
-            background-color: rgba(255,255,255,0.9);
+            background-color: white;  /* background putih */
             padding: 10px 18px;
             border-radius: 10px;
             display:inline-block;
@@ -236,25 +236,34 @@ def main():
         else:
             st.subheader(subheader_classification)
             if classifier:
-                # 🔹 Force input sesuai model tanpa ubah sintaks
+                # 🔹 Force input sesuai model
                 target_size = classifier.input_shape[1:3]
                 img_resized = img.resize(target_size)
                 arr = keras_image.img_to_array(img_resized)
                 arr = np.expand_dims(arr, axis=0) / 255.0
-                arr = arr.astype('float32')  # paksa tipe sesuai model
+                arr = arr.astype('float32')
 
+                # 🔹 Prediksi
                 pred = classifier.predict(arr)
                 class_idx = np.argmax(pred)
                 conf = np.max(pred)
-                classes = ["Half Water 💧", "Full Water 💦", "Overflowing 🚰"]
+
+                # 🔹 Ambil kelas dari model otomatis
+                if hasattr(classifier, "class_names"):  # jika model keras disimpan dengan class_names
+                    classes = classifier.class_names
+                else:
+                    # default fallback
+                    classes = ["Half Water 💧", "Full Water 💦", "Overflowing 🚰"]
+
+                # pastikan index tidak out of range
                 result_class = classes[class_idx] if class_idx < len(classes) else "Tidak Dikenal"
-                st.success(f"{detected_class_text}: **{result_class}** (probabilitas {conf:.2%})")
+
+                st.markdown(f"<div class='highlight-box'>{detected_class_text}: <b>{result_class}</b> (probabilitas {conf:.2%})</div>", unsafe_allow_html=True)
                 result_img = img.copy().resize((400, 400))
             else:
                 st.error(keras_error_text)
 
         progress.progress(100)
-
         st.markdown(f"<div style='text-align:center; margin-top:15px;'><div class='highlight-box'>{done_text}</div></div>", unsafe_allow_html=True)
 
         if result_img:
