@@ -23,65 +23,61 @@ EMAIL_WATERVISION = "watervision@gmail.com"
 WHATSAPP_NUMBER = "6282245357681"
 
 # ==============================
-# BACKGROUND SETUP
+# BACKGROUND
 # ==============================
 def set_background(image_file):
     if not os.path.exists(image_file):
         return
     with open(image_file, "rb") as f:
-        data = f.read()
-    encoded = base64.b64encode(data).decode()
-    css = f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{
-        background-image: url("data:image/png;base64,{encoded}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        transition: background 0.5s ease;
-    }}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
+        encoded = base64.b64encode(f.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background: url("data:image/png;base64,{encoded}") no-repeat center center fixed;
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 set_background(BG_IMAGE)
 
 # ==============================
-# CUSTOM STYLE (DARK/LIGHT MODE)
+# CUSTOM STYLE
 # ==============================
 def apply_style(dark_mode=False):
-    text_color = "#f2f2f2" if dark_mode else "#0e1b2b"
-    upload_bg = "rgba(255,255,255,0.1)" if dark_mode else "rgba(255,255,255,0.7)"
-    footer_color = "#f2f2f2" if dark_mode else "#0e1b2b"
-    box_bg = "rgba(40,40,40,0.7)" if dark_mode else "rgba(255,255,255,0.9)"
+    text_color = "#f5f5f5" if dark_mode else "#0e1b2b"
+    box_bg = "rgba(255,255,255,0.25)" if dark_mode else "rgba(255,255,255,0.7)"
+    footer_color = "#f5f5f5" if dark_mode else "#0e1b2b"
+    info_bg = "rgba(30, 144, 255, 0.9)"  # biru info yang kontras tapi lembut
 
     st.markdown(f"""
     <style>
     .title {{
         text-align: center;
-        font-size: 2.3rem;
+        font-size: 2.4rem;
         font-weight: 700;
-        margin-top: 1rem;
         color: {text_color};
+        margin-top: 1rem;
     }}
     .subtext {{
         text-align: center;
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: {text_color};
-        margin-bottom: 1rem;
+        margin-bottom: 1.2rem;
     }}
-    .upload-box {{
-        background: {upload_bg};
-        padding: 2rem;
-        border-radius: 15px;
-        border: 2px dashed #ccc;
-        text-align: center;
+    .hero-img {{
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
     }}
     .card {{
         background: {box_bg};
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }}
     footer {{
         text-align: center;
@@ -101,6 +97,25 @@ def apply_style(dark_mode=False):
     }}
     .whatsapp {{ background-color: #25D366; }}
     .gmail {{ background-color: #D93025; }}
+    .upload-container {{
+        background: {box_bg};
+        border: 2px dashed rgba(255,255,255,0.6);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }}
+    .info-box {{
+        background: {info_bg};
+        color: white;
+        text-align: center;
+        padding: 0.8rem 1.2rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        font-weight: 600;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -132,21 +147,26 @@ def main():
     dark_mode = st.sidebar.toggle("🌙 Dark Mode", False)
     apply_style(dark_mode)
 
-    # Sidebar Info
     st.sidebar.title("⚙️ Settings")
     lang = st.sidebar.selectbox("🌐 Language", ["English", "Indonesia"])
     st.sidebar.markdown("---")
     mode = st.sidebar.radio("🎯 Choose Function", ["Object Detection (YOLO)", "Image Classification"])
     st.sidebar.markdown("---")
-    st.sidebar.info("💡 Upload gambar JPG/PNG dan tunggu hasil deteksi atau klasifikasi.")
 
-    # Header
+    if lang == "English":
+        st.sidebar.info("💡 Just upload an image, wait a moment, and your detection or classification results will appear.")
+    else:
+        st.sidebar.info("💡 Cukup unggah gambar, tunggu sebentar, dan hasil deteksi atau klasifikasi akan muncul.")
+
+    # Title
     st.markdown(f"<div class='title'>{APP_TITLE}</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='subtext'>Smart Vision for Every Drop 💧</div>", unsafe_allow_html=True)
 
-    # Logo Botol Air
+    # Hero Image
     if os.path.exists(BOTOL_IMAGE):
-        st.image(BOTOL_IMAGE, width=280, caption="WaterVision", use_container_width=False)
+        st.markdown("<div class='hero-img'>", unsafe_allow_html=True)
+        st.image(BOTOL_IMAGE, width=260)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # Kontak
     st.markdown(f"""
@@ -156,10 +176,9 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    # Upload Gambar
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    # Upload Container
     upload_label = "📤 Upload Image (JPG/PNG):" if lang == "English" else "📤 Unggah Gambar (JPG/PNG):"
+    st.markdown("<div class='upload-container'>", unsafe_allow_html=True)
     uploaded = st.file_uploader(upload_label, type=["jpg", "jpeg", "png"])
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -209,10 +228,10 @@ def main():
             st.experimental_rerun()
 
     else:
-        st.info("Please upload an image first." if lang == "English" else "Silakan unggah gambar terlebih dahulu.")
+        message = "📘 Please upload an image first." if lang == "English" else "📘 Silakan unggah gambar terlebih dahulu."
+        st.markdown(f"<div class='info-box'>{message}</div>", unsafe_allow_html=True)
 
-    # Footer
-    st.markdown(f"<footer>© 2025 <b>WaterVision</b> — Powered by <b>AI & Deep Learning</b></footer>", unsafe_allow_html=True)
+    st.markdown(f"<footer>© 2025 <b>WaterVision</b> — Powered by 💧 Smart Vision Tech</footer>", unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
