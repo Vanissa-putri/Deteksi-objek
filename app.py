@@ -98,6 +98,22 @@ def add_custom_css():
         .about-link:hover {{
             background-color: rgba(0, 120, 200, 1);
         }}
+        .learn-link {{
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 15px;
+        }}
+        .learn-link a {{
+            color: #007acc;
+            text-decoration: none;
+            transition: 0.2s;
+        }}
+        .learn-link a:hover {{
+            color: #004c7d;
+            text-decoration: underline;
+        }}
         footer {{
             text-align: center;
             color: white;
@@ -127,7 +143,6 @@ def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
-    # "About this app" link
     st.markdown(f"<a class='about-link' href='?page=about'>About this app</a>", unsafe_allow_html=True)
 
     # Sidebar Settings
@@ -148,6 +163,13 @@ def main():
     st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasi tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
 
+    # Link “Tentang Web Ini”
+    st.markdown("""
+    <div class='learn-link'>
+        🔗 <a href='?page=about'>Pelajari lebih lanjut tentang WaterVision</a>
+    </div>
+    """, unsafe_allow_html=True)
+
     # Gambar Botol Air (tengah)
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
@@ -160,7 +182,7 @@ def main():
     # Info singkat dashboard
     st.markdown("""
     <div class='info-box'>
-        🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam **tiga kelas utama**:  
+        🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam tiga kelas utama:  
         <b>Full Water</b> 💦, <b>Half Water</b> 💧, dan <b>Overflowing</b> 🚰.
     </div>
     """, unsafe_allow_html=True)
@@ -238,11 +260,11 @@ def about_page():
             <li>💦 <b>Full Water</b> — air penuh</li>
             <li>🚰 <b>Overflowing</b> — air meluap</li>
         </ul>
-        <p>Tujuan pengembangan aplikasi ini adalah untuk mendukung sistem monitoring otomatis berbasis citra dalam pengelolaan air cerdas.</p>
+        <p>Tujuan utama pengembangan aplikasi ini adalah untuk mendukung sistem monitoring otomatis berbasis citra dalam pengelolaan air cerdas dan efisien.</p>
         <br>
         <p><b>Developer:</b> Vanissa Aulya Putri<br>
         <b>Email:</b> watervision@gmail.com</p>
-        <a href="/" style="display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">⬅ Back to Main</a>
+        <a href="/" style="display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">⬅ Kembali ke Dashboard</a>
     </div>
     """, unsafe_allow_html=True)
 
