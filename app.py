@@ -4,9 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image as keras_image
 import numpy as np
 from PIL import Image
-import base64
-import os
-import time
+import base64, os, time
 
 # ==============================
 # CONFIG
@@ -20,7 +18,7 @@ BG_IMAGE = "assets/water_bg.jpg"
 BOTOL_IMAGE = "assets/botol_air.jpeg"
 
 # ==============================
-# CUSTOM STYLE
+# STYLE (MODERN)
 # ==============================
 def add_custom_css():
     bg = ""
@@ -30,13 +28,14 @@ def add_custom_css():
 
     st.markdown(f"""
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
         .stApp {{
             background-image: url("data:image/jpg;base64,{bg}");
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            color: #0e1b2b;
             font-family: 'Poppins', sans-serif;
+            color: #0e1b2b;
         }}
         h1 {{
             text-align: center;
@@ -48,7 +47,7 @@ def add_custom_css():
             color: #0b2545;
         }}
         .stButton>button {{
-            background: linear-gradient(90deg, #0099ff, #66ccff);
+            background: linear-gradient(90deg, #0099ff, #33bbff);
             color: white;
             border: none;
             border-radius: 10px;
@@ -57,7 +56,7 @@ def add_custom_css():
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }}
         .stButton>button:hover {{
-            background: linear-gradient(90deg, #007acc, #33bbff);
+            background: linear-gradient(90deg, #007acc, #1ebfff);
             transform: scale(1.05);
         }}
         .contact-btn {{
@@ -82,6 +81,10 @@ def add_custom_css():
             font-weight: 500;
             backdrop-filter: blur(6px);
         }}
+        hr {{
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-top: 25px;
+        }}
         footer {{
             text-align: center;
             color: #ffffff;
@@ -93,6 +96,7 @@ def add_custom_css():
     </style>
     """, unsafe_allow_html=True)
 
+
 # ==============================
 # LOAD MODEL
 # ==============================
@@ -102,6 +106,7 @@ def load_models():
     keras_model = tf.keras.models.load_model(KERAS_MODEL_PATH) if os.path.exists(KERAS_MODEL_PATH) else None
     return yolo, keras_model
 
+
 # ==============================
 # MAIN APP
 # ==============================
@@ -109,10 +114,25 @@ def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
-    st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; font-size:18px;'>Empowering Smart Water Quality Detection 🌊</p>", unsafe_allow_html=True)
+    # SIDEBAR
+    st.sidebar.title("⚙️ Settings")
+    lang = st.sidebar.selectbox("🌐 Language", ["English", "Indonesia"])
 
-    # Display bottle image
+    st.sidebar.markdown("---")
+    st.sidebar.title("🎯 Mode Aplikasi")
+    mode = st.sidebar.radio("", ["Object Detection (YOLO)", "Image Classification"])
+
+    st.sidebar.markdown("### 📘 Panduan")
+    if lang == "English":
+        st.sidebar.write("1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for result")
+    else:
+        st.sidebar.write("1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya")
+
+    # HEADER
+    st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-size:18px;'>Empowering Smart Water Detection 🌊</p>", unsafe_allow_html=True)
+
+    # BOTOL AIR IMAGE
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
         st.markdown(f"""
@@ -121,7 +141,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    # Contact Buttons
+    # CONTACT BUTTONS
     st.markdown(f"""
     <div style="text-align:center; margin-bottom:20px;">
         <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
@@ -129,18 +149,14 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Mode Selection
-    st.sidebar.title("🎯 Pilih Mode Aplikasi")
-    mode = st.sidebar.radio("Mode Deteksi:", ["Object Detection (YOLO)", "Image Classification"])
-
-    # Upload Section
+    # UPLOAD SECTION
     st.markdown("<div style='display:flex; justify-content:center; margin-top:20px;'>", unsafe_allow_html=True)
-    uploaded = st.file_uploader("📤 Unggah Gambar (JPG/PNG)", type=["jpg", "jpeg", "png"])
+    uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
     st.markdown("</div>", unsafe_allow_html=True)
 
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
-        st.image(img, caption="📷 Gambar Diupload", use_container_width=True)
+        st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
         progress = st.progress(0)
         for i in range(0, 101, 20):
@@ -151,17 +167,17 @@ def main():
         result_img = None
 
         if "Object" in mode:
-            st.subheader("🔍 Hasil Deteksi Objek")
+            st.subheader("🔍 Hasil Deteksi Objek" if lang == "Indonesia" else "🔍 Object Detection Result")
             if yolo:
-                with st.spinner("Mendeteksi objek..."):
+                with st.spinner("Mendeteksi objek..." if lang == "Indonesia" else "Detecting objects..."):
                     res = yolo(img)
                     result_img = Image.fromarray(res[0].plot())
                     st.image(result_img, use_container_width=True)
             else:
-                st.error("⚠ Model YOLO tidak ditemukan!")
+                st.error("❌ Model YOLO tidak ditemukan!" if lang == "Indonesia" else "❌ YOLO model not found!")
 
         else:
-            st.subheader("🧠 Hasil Klasifikasi Gambar")
+            st.subheader("🧠 Hasil Klasifikasi Gambar" if lang == "Indonesia" else "🧠 Image Classification Result")
             if classifier:
                 img_resized = img.resize((224, 224))
                 arr = keras_image.img_to_array(img_resized)
@@ -169,16 +185,24 @@ def main():
                 pred = classifier.predict(arr)
                 class_idx = np.argmax(pred)
                 conf = np.max(pred)
-                st.success(f"✅ Kelas terdeteksi: **{class_idx}** (probabilitas {conf:.2%})")
+                if lang == "English":
+                    st.success(f"✅ Predicted class: **{class_idx}** (confidence {conf:.2%})")
+                else:
+                    st.success(f"✅ Kelas terdeteksi: **{class_idx}** (probabilitas {conf:.2%})")
             else:
-                st.error("⚠ Model Keras tidak ditemukan!")
+                st.error("❌ Model Keras tidak ditemukan!" if lang == "Indonesia" else "❌ Keras model not found!")
 
         progress.progress(100)
-        st.success("✅ Selesai!")
-    else:
-        st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
+        st.success("✅ Selesai!" if lang == "Indonesia" else "✅ Done!")
 
-    st.markdown("<footer>© 2025 WaterVision — AI & Deep Learning for a Sustainable Future 💧</footer>", unsafe_allow_html=True)
+    else:
+        msg = "📘 Silakan unggah gambar terlebih dahulu." if lang == "Indonesia" else "📘 Please upload an image first."
+        st.markdown(f"<div class='info-box'>{msg}</div>", unsafe_allow_html=True)
+
+    # FOOTER
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("<footer>© 2025 WaterVision — Powered by AI & Deep Learning 💧</footer>", unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
