@@ -236,9 +236,13 @@ def main():
         else:
             st.subheader(subheader_classification)
             if classifier:
-                img_resized = img.resize((224, 224))
+                # 🔹 Force input sesuai model tanpa ubah sintaks
+                target_size = classifier.input_shape[1:3]
+                img_resized = img.resize(target_size)
                 arr = keras_image.img_to_array(img_resized)
                 arr = np.expand_dims(arr, axis=0) / 255.0
+                arr = arr.astype('float32')  # paksa tipe sesuai model
+
                 pred = classifier.predict(arr)
                 class_idx = np.argmax(pred)
                 conf = np.max(pred)
