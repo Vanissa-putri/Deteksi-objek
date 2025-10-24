@@ -1,122 +1,117 @@
 import streamlit as st
-from ultralytics import YOLO
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image as keras_image
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-import io
+from PIL import Image
 import base64
 import os
+import io
 import time
+import numpy as np
+import tensorflow as tf
+from ultralytics import YOLO
+from tensorflow.keras.preprocessing import image as keras_image
 
 # ==============================
 # CONFIG
 # ==============================
+st.set_page_config(page_title="WaterVision — Image Detection & Classification", page_icon="💧", layout="wide")
+
 APP_TITLE = "WaterVision — Image Detection & Classification"
 YOLO_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 4.pt"
 KERAS_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 2.h5"
-WHATSAPP_NUMBER = "6282245357681"
-EMAIL_WATERVISION = "watervision@gmail.com"
 BG_IMAGE = "assets/water_bg.jpg"
-HERO_IMAGE = "assets/botol_air.jpeg"
+BOTOL_IMAGE = "assets/botol_air.jpeg"
+EMAIL_WATERVISION = "watervision@gmail.com"
+WHATSAPP_NUMBER = "6282245357681"
 
 # ==============================
-# CSS DYNAMIC MODE
+# BACKGROUND SETUP
 # ==============================
-def add_css(dark_mode=False):
-    text_color = "#f5f5f5" if dark_mode else "#0e1b2b"
-    box_color = "rgba(25, 25, 25, 0.8)" if dark_mode else "rgba(255,255,255,0.9)"
-    overlay = "rgba(0,0,0,0.5)" if dark_mode else "rgba(255,255,255,0.3)"
+def set_background(image_file):
+    if not os.path.exists(image_file):
+        return
+    with open(image_file, "rb") as f:
+        data = f.read()
+    encoded = base64.b64encode(data).decode()
+    css = f"""
+    <style>
+    [data-testid="stAppViewContainer"] {{
+        background-image: url("data:image/png;base64,{encoded}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        transition: background 0.5s ease;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
-    if os.path.exists(BG_IMAGE):
-        with open(BG_IMAGE, "rb") as f:
-            base64_bg = base64.b64encode(f.read()).decode()
-        bg_image = f"url('data:image/jpg;base64,{base64_bg}')"
-    else:
-        bg_image = "none"
+set_background(BG_IMAGE)
+
+# ==============================
+# CUSTOM STYLE (DARK/LIGHT MODE)
+# ==============================
+def apply_style(dark_mode=False):
+    text_color = "#f2f2f2" if dark_mode else "#0e1b2b"
+    upload_bg = "rgba(255,255,255,0.1)" if dark_mode else "rgba(255,255,255,0.7)"
+    footer_color = "#f2f2f2" if dark_mode else "#0e1b2b"
+    box_bg = "rgba(40,40,40,0.7)" if dark_mode else "rgba(255,255,255,0.9)"
 
     st.markdown(f"""
     <style>
-        .stApp {{
-            background-image: linear-gradient({overlay}, {overlay}), {bg_image};
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: {text_color};
-        }}
-        h1, h2, h3, h4, h5, h6, p, span, label {{
-            color: {text_color} !important;
-        }}
-        .contact-btn {{
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 14px;
-            margin-right: 6px;
-            box-shadow: 0px 3px 6px rgba(0,0,0,0.25);
-        }}
-        .whatsapp {{ background-color: #25d366; color: white; }}
-        .gmail {{ background-color: #d93025; color: white; }}
-        .hero {{
-            text-align: center;
-            margin-top: 15px;
-            margin-bottom: 20px;
-        }}
-        .hero img {{
-            border-radius: 15px;
-            width: 50%;
-            opacity: 0.95;
-        }}
-        .card {{
-            background-color: {box_color};
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-        }}
-        .footer {{
-            text-align: center;
-            font-size: 0.9rem;
-            margin-top: 40px;
-            color: {text_color};
-        }}
-        .stProgress > div > div {{
-            background-color: #00BFFF;
-        }}
+    .title {{
+        text-align: center;
+        font-size: 2.3rem;
+        font-weight: 700;
+        margin-top: 1rem;
+        color: {text_color};
+    }}
+    .subtext {{
+        text-align: center;
+        font-size: 1rem;
+        color: {text_color};
+        margin-bottom: 1rem;
+    }}
+    .upload-box {{
+        background: {upload_bg};
+        padding: 2rem;
+        border-radius: 15px;
+        border: 2px dashed #ccc;
+        text-align: center;
+    }}
+    .card {{
+        background: {box_bg};
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    }}
+    footer {{
+        text-align: center;
+        color: {footer_color};
+        font-size: 0.9rem;
+        margin-top: 4rem;
+    }}
+    .contact-btn {{
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        margin: 5px;
+        color: white;
+    }}
+    .whatsapp {{ background-color: #25D366; }}
+    .gmail {{ background-color: #D93025; }}
     </style>
     """, unsafe_allow_html=True)
 
-
 # ==============================
-# LOGO
-# ==============================
-def generate_logo(size=150):
-    img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
-    draw = ImageDraw.Draw(img)
-    draw.ellipse([10, 10, size-10, size-10], fill=(12, 105, 180))
-    draw.ellipse([25, 25, size-25, size-25], fill=(60, 160, 230))
-    wave_y = size * 0.65
-    draw.rectangle([20, wave_y, size-20, wave_y + 15], fill=(173, 216, 230))
-    try:
-        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 50)
-    except:
-        font = ImageFont.load_default()
-    draw.text((size/2 - 15, size/2 - 25), "W", fill="white", font=font)
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    buffer.seek(0)
-    return buffer
-
-
-# ==============================
-# LOAD MODELS (CACHE)
+# CACHE MODEL
 # ==============================
 @st.cache_resource
 def load_models():
     yolo = YOLO(YOLO_MODEL_PATH) if os.path.exists(YOLO_MODEL_PATH) else None
     keras_model = tf.keras.models.load_model(KERAS_MODEL_PATH) if os.path.exists(KERAS_MODEL_PATH) else None
     return yolo, keras_model
-
 
 # ==============================
 # UTILITIES
@@ -130,56 +125,51 @@ def download_link(img, filename="detection_result.png"):
     b64 = base64.b64encode(image_to_bytes(img)).decode()
     return f'<a href="data:file/png;base64,{b64}" download="{filename}" class="contact-btn gmail">⬇ Download Result</a>'
 
-
 # ==============================
 # MAIN APP
 # ==============================
 def main():
-    st.set_page_config(page_title=APP_TITLE, layout="wide")
+    dark_mode = st.sidebar.toggle("🌙 Dark Mode", False)
+    apply_style(dark_mode)
 
-    # Sidebar
+    # Sidebar Info
     st.sidebar.title("⚙️ Settings")
     lang = st.sidebar.selectbox("🌐 Language", ["English", "Indonesia"])
-    dark_mode = st.sidebar.toggle("🌙 Dark Mode", False)
-    add_css(dark_mode)
-
     st.sidebar.markdown("---")
-    st.sidebar.title("🎯 Application Mode")
-    mode = st.sidebar.radio("Choose Function:", ["Object Detection (YOLO)", "Image Classification"])
-    st.sidebar.title("📘 How to Use")
-    st.sidebar.write("1️⃣ Pilih mode\n\n2️⃣ Upload gambar JPG/PNG\n\n3️⃣ Tunggu hasilnya muncul")
+    mode = st.sidebar.radio("🎯 Choose Function", ["Object Detection (YOLO)", "Image Classification"])
+    st.sidebar.markdown("---")
+    st.sidebar.info("💡 Upload gambar JPG/PNG dan tunggu hasil deteksi atau klasifikasi.")
 
     # Header
-    col1, col2 = st.columns([1, 8])
-    with col1:
-        st.image(generate_logo(), width=90)
-    with col2:
-        title = "WaterVision — Image Detection & Classification" if lang == "English" else "WaterVision — Deteksi & Klasifikasi Gambar"
-        st.markdown(f"<h1>{title}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<div class='title'>{APP_TITLE}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='subtext'>Smart Vision for Every Drop 💧</div>", unsafe_allow_html=True)
 
+    # Logo Botol Air
+    if os.path.exists(BOTOL_IMAGE):
+        st.image(BOTOL_IMAGE, width=280, caption="WaterVision", use_container_width=False)
+
+    # Kontak
     st.markdown(f"""
-        <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
-        <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
+        <div style="text-align:center;">
+            <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
+            <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
+        </div>
     """, unsafe_allow_html=True)
 
-    # Hero Section (smaller image)
-    if os.path.exists(HERO_IMAGE):
-        st.markdown("<div class='hero'>", unsafe_allow_html=True)
-        st.image(HERO_IMAGE, caption="WaterVision — Smart Vision for Every Drop 💧")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Upload Section
-    st.markdown("---")
+    # Upload Gambar
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
     upload_label = "📤 Upload Image (JPG/PNG):" if lang == "English" else "📤 Unggah Gambar (JPG/PNG):"
     uploaded = st.file_uploader(upload_label, type=["jpg", "jpeg", "png"])
+    st.markdown("</div>", unsafe_allow_html=True)
 
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
         st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
         progress = st.progress(0)
-        for i in range(0, 101, 20):
-            time.sleep(0.04)
+        for i in range(0, 101, 15):
+            time.sleep(0.05)
             progress.progress(i)
 
         yolo, classifier = load_models()
@@ -194,7 +184,7 @@ def main():
                     st.image(result_img, use_container_width=True)
                     st.markdown(download_link(result_img), unsafe_allow_html=True)
             else:
-                st.error("⚠️ YOLO model not found!" if lang == "English" else "⚠️ Model YOLO tidak ditemukan!")
+                st.error("YOLO model not found!" if lang == "English" else "Model YOLO tidak ditemukan!")
 
         else:
             st.subheader("🧠 Classification Result" if lang == "English" else "🧠 Hasil Klasifikasi Gambar")
@@ -210,18 +200,19 @@ def main():
                 else:
                     st.success(f"✅ Kelas terdeteksi: **{class_idx}** (probabilitas {conf:.2%})")
             else:
-                st.error("⚠️ Keras model not found!" if lang == "English" else "⚠️ Model Keras tidak ditemukan!")
+                st.error("Keras model not found!" if lang == "English" else "Model Keras tidak ditemukan!")
 
         progress.progress(100)
         st.success("✅ Done!" if lang == "English" else "✅ Selesai!")
 
         if st.button("🔄 Reset" if lang == "English" else "🔄 Reset Gambar"):
             st.experimental_rerun()
+
     else:
         st.info("Please upload an image first." if lang == "English" else "Silakan unggah gambar terlebih dahulu.")
 
-    st.markdown("---")
-    st.markdown("<div class='footer'>© 2025 WaterVision — Powered by AI & Deep Learning</div>", unsafe_allow_html=True)
+    # Footer
+    st.markdown(f"<footer>© 2025 <b>WaterVision</b> — Powered by <b>AI & Deep Learning</b></footer>", unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
