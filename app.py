@@ -1,135 +1,233 @@
 import streamlit as st
-from PIL import Image
 from ultralytics import YOLO
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image as keras_image
 import numpy as np
-import cv2
-import os
+from PIL import Image
+import base64, os, time, webbrowser
 
-# ===================== CONFIGURASI DASAR =====================
-st.set_page_config(page_title="Water Level Classifier", page_icon="💧", layout="wide")
+# ==============================
+# CONFIG
+# ==============================
+APP_TITLE = "💧 WaterVision — Smart Image Detection"
+YOLO_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 4.pt"
+KERAS_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 2.h5"
+WHATSAPP_NUMBER = "6282245357681"
+EMAIL_WATERVISION = "watervision@gmail.com"
+BG_IMAGE = "assets/water_bg.jpg"
+BOTOL_IMAGE = "assets/botol_air.jpeg"
+TENTANG_WEB_LINK = "https://watervision-info.streamlit.app"  # Ganti ke link halaman kamu nanti
 
-# CSS custom (background, style, tombol, dll)
-st.markdown("""
+# ==============================
+# STYLE (MODERN)
+# ==============================
+def add_custom_css():
+    bg = ""
+    if os.path.exists(BG_IMAGE):
+        with open(BG_IMAGE, "rb") as f:
+            bg = base64.b64encode(f.read()).decode()
+
+    st.markdown(f"""
     <style>
-        body {
-            background-color: #f5f9ff;
-        }
-        [data-testid="stAppViewContainer"] {
-            background-image: url("assets/background.jpg");
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        .stApp {{
+            background-image: url("data:image/jpg;base64,{bg}");
             background-size: cover;
             background-position: center;
-        }
-        .main-title {
-            font-size: 38px;
-            font-weight: bold;
-            color: #003366;
+            background-attachment: fixed;
+            font-family: 'Poppins', sans-serif;
+            color: #0e1b2b;
+        }}
+        h1 {{
             text-align: center;
-            margin-bottom: -10px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #555;
-            font-size: 18px;
-            margin-bottom: 30px;
-        }
-        .upload-box {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-        }
-        .stButton>button {
-            background-color: #007bff;
+            font-weight: 700;
+            color: #073763;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
+        }}
+        h2, h3, h4 {{
+            color: #0b2545;
+        }}
+        .stButton>button {{
+            background: linear-gradient(90deg, #0099ff, #33bbff);
             color: white;
-            border-radius: 10px;
-            height: 3em;
-            width: 10em;
             border: none;
-            font-weight: 600;
-        }
-        .stButton>button:hover {
-            background-color: #0056b3;
-            color: white;
-        }
-        .link-top {
-            position: absolute;
-            top: 25px;
-            right: 50px;
-            font-size: 16px;
-            color: #0047ab;
+            border-radius: 10px;
+            padding: 0.6em 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }}
+        .stButton>button:hover {{
+            background: linear-gradient(90deg, #007acc, #1ebfff);
+            transform: scale(1.05);
+        }}
+        .contact-btn {{
+            padding: 8px 15px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
-        }
-        .link-top:hover {
-            color: #002b80;
-        }
+            font-size: 14px;
+            margin-right: 6px;
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.25);
+            transition: 0.2s ease;
+        }}
+        .whatsapp {{ background-color: #25d366; color: white; }}
+        .gmail {{ background-color: #d93025; color: white; }}
+        .contact-btn:hover {{ opacity: 0.85; }}
+        .info-box {{
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(255,255,255,0.85);
+            border-radius: 10px;
+            margin-top: 25px;
+            font-weight: 500;
+            backdrop-filter: blur(6px);
+        }}
+        hr {{
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-top: 25px;
+        }}
+        footer {{
+            text-align: center;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.45);
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 30px;
+        }}
+        /* Link pojok kanan atas */
+        .top-right-link {{
+            position: fixed;
+            top: 25px;
+            right: 35px;
+            background-color: rgba(255,255,255,0.9);
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
+        }}
+        .top-right-link a {{
+            text-decoration: none;
+            color: #004d99;
+            font-weight: 600;
+        }}
+        .top-right-link a:hover {{
+            color: #007acc;
+        }}
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# ===================== MENU NAVIGASI =====================
-menu = st.sidebar.radio("📍 Navigasi", ["Dashboard", "Tentang Web"])
+# ==============================
+# LOAD MODEL
+# ==============================
+@st.cache_resource
+def load_models():
+    yolo = YOLO(YOLO_MODEL_PATH) if os.path.exists(YOLO_MODEL_PATH) else None
+    keras_model = tf.keras.models.load_model(KERAS_MODEL_PATH) if os.path.exists(KERAS_MODEL_PATH) else None
+    return yolo, keras_model
 
-# ===================== HALAMAN DASHBOARD =====================
-if menu == "Dashboard":
-    st.markdown('<div class="main-title">💧 Water Level Classification</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Aplikasi ini digunakan untuk mendeteksi tingkat air dalam botol: Full, Half, atau Overflowing.</div>', unsafe_allow_html=True)
+# ==============================
+# MAIN APP
+# ==============================
+def main():
+    st.set_page_config(page_title=APP_TITLE, layout="wide")
+    add_custom_css()
 
-    st.markdown('<a href="?menu=Tentang Web" class="link-top">Tentang Web →</a>', unsafe_allow_html=True)
+    # Link pojok kanan atas ke halaman “Tentang Web”
+    st.markdown(f"""
+    <div class="top-right-link">
+        <a href="{TENTANG_WEB_LINK}" target="_blank">ℹ️ Tentang Web</a>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.write("")
-    st.write("### 📤 Upload Gambar untuk Deteksi")
+    # SIDEBAR
+    st.sidebar.title("⚙️ Settings")
+    lang = st.sidebar.selectbox("🌐 Language", ["English", "Indonesia"])
 
-    uploaded_file = st.file_uploader("Pilih file gambar", type=["jpg", "jpeg", "png"])
+    st.sidebar.markdown("---")
+    st.sidebar.title("🎯 Mode Aplikasi")
+    mode = st.sidebar.radio("", ["Object Detection (YOLO)", "Image Classification"])
 
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Gambar yang Diupload", use_container_width=False, width=400)
+    st.sidebar.markdown("### 📘 Panduan")
+    if lang == "English":
+        st.sidebar.write("1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for result")
+    else:
+        st.sidebar.write("1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya")
 
-        model_path = "best.pt"
-        if not os.path.exists(model_path):
-            st.error("Model YOLO tidak ditemukan. Pastikan file 'best.pt' tersedia.")
+    # HEADER
+    st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-size:18px;'>Empowering Smart Water Detection 🌊</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-size:16px; color:#0b2545;'>Web ini digunakan untuk mengklasifikasikan tingkat air dalam botol menjadi tiga kelas: <b>Full Water</b>, <b>Half Water</b>, dan <b>Overflowing</b>.</p>", unsafe_allow_html=True)
+
+    # BOTOL AIR IMAGE
+    if os.path.exists(BOTOL_IMAGE):
+        encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
+        st.markdown(f"""
+        <div style='display:flex; justify-content:center; align-items:center; margin:15px 0;'>
+            <img src='data:image/jpeg;base64,{encoded}' width='230' style='border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.4);'>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # CONTACT BUTTONS
+    st.markdown(f"""
+    <div style="text-align:center; margin-bottom:20px;">
+        <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
+        <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # UPLOAD SECTION
+    st.markdown("<div style='display:flex; justify-content:center; margin-top:20px;'>", unsafe_allow_html=True)
+    uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if uploaded:
+        img = Image.open(uploaded).convert("RGB")
+        st.image(img, caption="📷 Uploaded Image", use_container_width=True)
+
+        progress = st.progress(0)
+        for i in range(0, 101, 20):
+            time.sleep(0.05)
+            progress.progress(i)
+
+        yolo, classifier = load_models()
+        result_img = None
+
+        if "Object" in mode:
+            st.subheader("🔍 Hasil Deteksi Objek" if lang == "Indonesia" else "🔍 Object Detection Result")
+            if yolo:
+                with st.spinner("Mendeteksi objek..." if lang == "Indonesia" else "Detecting objects..."):
+                    res = yolo(img)
+                    result_img = Image.fromarray(res[0].plot())
+                    st.image(result_img, use_container_width=True)
+            else:
+                st.error("❌ Model YOLO tidak ditemukan!" if lang == "Indonesia" else "❌ YOLO model not found!")
+
         else:
-            model = YOLO(model_path)
-            results = model.predict(np.array(image))
+            st.subheader("🧠 Hasil Klasifikasi Gambar" if lang == "Indonesia" else "🧠 Image Classification Result")
+            if classifier:
+                img_resized = img.resize((224, 224))
+                arr = keras_image.img_to_array(img_resized)
+                arr = np.expand_dims(arr, axis=0) / 255.0
+                pred = classifier.predict(arr)
+                class_idx = np.argmax(pred)
+                conf = np.max(pred)
+                if lang == "English":
+                    st.success(f"✅ Predicted class: **{class_idx}** (confidence {conf:.2%})")
+                else:
+                    st.success(f"✅ Kelas terdeteksi: **{class_idx}** (probabilitas {conf:.2%})")
+            else:
+                st.error("❌ Model Keras tidak ditemukan!" if lang == "Indonesia" else "❌ Keras model not found!")
 
-            for r in results:
-                res_plotted = r.plot()
-                st.image(res_plotted, caption="Hasil Deteksi", use_container_width=False, width=500)
+        progress.progress(100)
+        st.success("✅ Selesai!" if lang == "Indonesia" else "✅ Done!")
 
-            label_counts = {}
-            for r in results:
-                for c in r.boxes.cls:
-                    label = model.names[int(c)]
-                    label_counts[label] = label_counts.get(label, 0) + 1
+    else:
+        msg = "📘 Silakan unggah gambar terlebih dahulu." if lang == "Indonesia" else "📘 Please upload an image first."
+        st.markdown(f"<div class='info-box'>{msg}</div>", unsafe_allow_html=True)
 
-            st.write("### 📊 Hasil Klasifikasi:")
-            for label, count in label_counts.items():
-                st.write(f"- **{label}**: {count} objek terdeteksi")
+    # FOOTER
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("<footer>© 2025 WaterVision — Powered by AI & Deep Learning 💧</footer>", unsafe_allow_html=True)
 
-# ===================== HALAMAN TENTANG WEB =====================
-elif menu == "Tentang Web":
-    st.title("ℹ️ Tentang Web Klasifikasi Air 💧")
-    st.write("""
-        Website ini dirancang untuk mengidentifikasi **tingkat air dalam botol** menggunakan model deep learning **YOLO (You Only Look Once)**.  
-        Model ini mampu membedakan antara tiga kondisi air:
-        """)
 
-    st.markdown("""
-        - 🟦 **Full Water** — botol terisi penuh air  
-        - 🟨 **Half Water** — botol setengah terisi  
-        - 🟥 **Overflowing** — air meluap dari botol  
-    """)
-
-    st.write("""
-        Tujuan dari web ini adalah untuk membantu proses **deteksi otomatis tingkat air** dengan cara yang cepat dan efisien, 
-        serta menampilkan hasil deteksi langsung dari gambar yang diunggah.
-    """)
-
-    st.markdown("---")
-    st.subheader("👩‍💻 Pengembang")
-    st.write("""
-        **Nama:** [Nama Kamu]  
-        **Email:** [emailkamu@example.com]  
-        **Model:** YOLOv8 - Deep Learning for Object Detection
-    """)
+if __name__ == "__main__":
+    main()
