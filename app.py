@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image as keras_image
 import numpy as np
 from PIL import Image
-import base64, os, time
+import base64, os, time, io
 
 # ==============================
 # CONFIGURATIONS
@@ -158,7 +158,7 @@ def main():
     st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasikan tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
 
-    # Gambar Botol Air di tengah
+    # Gambar botol air
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
         st.markdown(f"""
@@ -175,7 +175,6 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Tombol kontak
     st.markdown(f"""
     <div style="text-align:center; margin-top:25px;">
         <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
@@ -196,6 +195,8 @@ def main():
 
         yolo, classifier = load_models()
 
+        result_img = None
+
         if "Object" in mode:
             st.subheader("🔍 Hasil Deteksi Objek" if lang == "Indonesia" else "🔍 Object Detection Result")
             if yolo:
@@ -204,7 +205,7 @@ def main():
                     result_img = Image.fromarray(res[0].plot())
                     st.image(result_img, use_container_width=False, width=450)
             else:
-                st.error("❌ Model YOLO tidak ditemukan!" if lang == "Indonesia" else "❌ YOLO model not found!")
+                st.error("❌ Model YOLO tidak ditemukan!")
         else:
             st.subheader("🧠 Hasil Klasifikasi Gambar" if lang == "Indonesia" else "🧠 Image Classification Result")
             if classifier:
@@ -217,15 +218,26 @@ def main():
                 classes = ["Half Water 💧", "Full Water 💦", "Overflowing 🚰"]
                 result_class = classes[class_idx] if class_idx < len(classes) else "Tidak Dikenal"
                 st.success(f"✅ Kelas terdeteksi: **{result_class}** (probabilitas {conf:.2%})")
+
+                # buat image hasil klasifikasi (tempel teks prediksi)
+                result_img = img.copy()
+                result_img = result_img.resize((400, 400))
             else:
                 st.error("❌ Model Keras tidak ditemukan!")
 
         progress.progress(100)
 
-        # ✅ tampilan hasil selesai dibuat lebih jelas
+        # ✅ tampilan selesai
         st.markdown("<div style='text-align:center; margin-top:15px;'><div class='highlight-box'>✅ Selesai!</div></div>", unsafe_allow_html=True)
 
-        # 🔗 link pelajari lebih lanjut dengan background putih
+        # 📥 tombol download hasil gambar
+        if result_img:
+            buf = io.BytesIO()
+            result_img.save(buf, format="PNG")
+            byte_im = buf.getvalue()
+            st.download_button("📥 Download Hasil Gambar", data=byte_im, file_name="hasil_watervision.png", mime="image/png")
+
+        # 🔗 link pelajari lebih lanjut
         st.markdown("""
         <div style='text-align:center; margin-top:25px;'>
             <div class='highlight-box'>
@@ -235,7 +247,6 @@ def main():
             </div>
         </div>
         """, unsafe_allow_html=True)
-
     else:
         st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
 
@@ -260,7 +271,7 @@ def about_page():
             <li>💦 <b>Full Water</b> — air penuh</li>
             <li>🚰 <b>Overflowing</b> — air meluap</li>
         </ul>
-        <p>Website ini dibuat untuk membantu pengguna dalam melakukan pengawasan otomatis berbasis citra visual, terutama di bidang pengelolaan air dan sistem sensor cerdas.</p>
+        <p>Website ini dibuat untuk membantu pengguna dalam melakukan pengawasan otomatis berbasis citra visual.</p>
         <br>
         <p><b>Developer:</b> Vanissa Aulya Putri<br>
         <b>Email:</b> watervision@gmail.com</p>
