@@ -1,15 +1,10 @@
-# === Core Framework ===
 streamlit
 tensorflow
 ultralytics
-
-# === Image & CV Processing ===
 pillow
-opencv-python-headless
+opencv-python-headless==4.8.1.78
 numpy
 matplotlib
-
-# === Utility & Compatibility ===
 pandas
 scikit-learn
 protobuf
