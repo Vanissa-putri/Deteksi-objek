@@ -137,10 +137,8 @@ def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
-    # Link ke halaman about
     st.markdown(f"<a class='about-link' href='?page=about'>Tentang Web Ini</a>", unsafe_allow_html=True)
 
-    # Sidebar
     st.sidebar.title("⚙️ Pengaturan")
     lang = st.sidebar.selectbox("🌐 Bahasa", ["Indonesia", "English"])
 
@@ -154,11 +152,9 @@ def main():
     else:
         st.sidebar.write("1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya")
 
-    # Header
     st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasikan tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
 
-    # Gambar botol air
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
         st.markdown(f"""
@@ -167,7 +163,6 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    # Info singkat
     st.markdown("""
     <div class='info-box'>
         🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam tiga kelas utama:  
@@ -182,11 +177,12 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Upload
     uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
-        st.image(img, caption="📷 Uploaded Image", use_container_width=True)
+
+        # 🔹 Gambar upload jadi sedang (bukan full-width)
+        st.image(img, caption="📷 Uploaded Image", width=450)
 
         progress = st.progress(0)
         for i in range(0, 101, 25):
@@ -218,26 +214,20 @@ def main():
                 classes = ["Half Water 💧", "Full Water 💦", "Overflowing 🚰"]
                 result_class = classes[class_idx] if class_idx < len(classes) else "Tidak Dikenal"
                 st.success(f"✅ Kelas terdeteksi: **{result_class}** (probabilitas {conf:.2%})")
-
-                # buat image hasil klasifikasi (tempel teks prediksi)
-                result_img = img.copy()
-                result_img = result_img.resize((400, 400))
+                result_img = img.copy().resize((400, 400))
             else:
                 st.error("❌ Model Keras tidak ditemukan!")
 
         progress.progress(100)
 
-        # ✅ tampilan selesai
         st.markdown("<div style='text-align:center; margin-top:15px;'><div class='highlight-box'>✅ Selesai!</div></div>", unsafe_allow_html=True)
 
-        # 📥 tombol download hasil gambar
         if result_img:
             buf = io.BytesIO()
             result_img.save(buf, format="PNG")
             byte_im = buf.getvalue()
             st.download_button("📥 Download Hasil Gambar", data=byte_im, file_name="hasil_watervision.png", mime="image/png")
 
-        # 🔗 link pelajari lebih lanjut
         st.markdown("""
         <div style='text-align:center; margin-top:25px;'>
             <div class='highlight-box'>
@@ -250,7 +240,6 @@ def main():
     else:
         st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
 
-    # Footer
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<footer>© 2025 WaterVision — Created by Vanissa Aulya Putri 💧</footer>", unsafe_allow_html=True)
 
