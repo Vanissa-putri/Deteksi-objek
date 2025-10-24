@@ -4,22 +4,22 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image as keras_image
 import numpy as np
 from PIL import Image
-import base64, os, time, webbrowser
+import base64, os, time
 
 # ==============================
-# CONFIG
+# CONFIGURATIONS
 # ==============================
-APP_TITLE = "💧 WaterVision — Smart Image Detection"
+APP_TITLE = "💧 WaterVision — Smart Water Classification"
 YOLO_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 4.pt"
 KERAS_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 2.h5"
 WHATSAPP_NUMBER = "6282245357681"
 EMAIL_WATERVISION = "watervision@gmail.com"
 BG_IMAGE = "assets/water_bg.jpg"
 BOTOL_IMAGE = "assets/botol_air.jpeg"
-TENTANG_WEB_LINK = "https://watervision-info.streamlit.app"  # Ganti ke link halaman kamu nanti
+
 
 # ==============================
-# STYLE (MODERN)
+# CUSTOM STYLE
 # ==============================
 def add_custom_css():
     bg = ""
@@ -36,16 +36,15 @@ def add_custom_css():
             background-position: center;
             background-attachment: fixed;
             font-family: 'Poppins', sans-serif;
-            color: #0e1b2b;
         }}
         h1 {{
             text-align: center;
+            color: #0a3d62;
             font-weight: 700;
-            color: #073763;
             text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
         }}
         h2, h3, h4 {{
-            color: #0b2545;
+            color: #052c48;
         }}
         .stButton>button {{
             background: linear-gradient(90deg, #0099ff, #33bbff);
@@ -54,7 +53,7 @@ def add_custom_css():
             border-radius: 10px;
             padding: 0.6em 1.2em;
             font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
         }}
         .stButton>button:hover {{
             background: linear-gradient(90deg, #007acc, #1ebfff);
@@ -82,38 +81,34 @@ def add_custom_css():
             font-weight: 500;
             backdrop-filter: blur(6px);
         }}
-        hr {{
-            border: 1px solid rgba(255,255,255,0.3);
-            margin-top: 25px;
+        .about-link {{
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            background-color: rgba(0, 153, 255, 0.9);
+            color: white !important;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s ease;
+            box-shadow: 0px 3px 8px rgba(0,0,0,0.3);
+        }}
+        .about-link:hover {{
+            background-color: rgba(0, 120, 200, 1);
         }}
         footer {{
             text-align: center;
-            color: #ffffff;
+            color: white;
             background-color: rgba(0, 0, 0, 0.45);
             border-radius: 8px;
             padding: 8px;
             margin-top: 30px;
         }}
-        /* Link pojok kanan atas */
-        .top-right-link {{
-            position: fixed;
-            top: 25px;
-            right: 35px;
-            background-color: rgba(255,255,255,0.9);
-            padding: 8px 15px;
-            border-radius: 8px;
-            box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
-        }}
-        .top-right-link a {{
-            text-decoration: none;
-            color: #004d99;
-            font-weight: 600;
-        }}
-        .top-right-link a:hover {{
-            color: #007acc;
-        }}
     </style>
     """, unsafe_allow_html=True)
+
 
 # ==============================
 # LOAD MODEL
@@ -124,23 +119,20 @@ def load_models():
     keras_model = tf.keras.models.load_model(KERAS_MODEL_PATH) if os.path.exists(KERAS_MODEL_PATH) else None
     return yolo, keras_model
 
+
 # ==============================
-# MAIN APP
+# MAIN PAGE
 # ==============================
 def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
-    # Link pojok kanan atas ke halaman “Tentang Web”
-    st.markdown(f"""
-    <div class="top-right-link">
-        <a href="{TENTANG_WEB_LINK}" target="_blank">ℹ️ Tentang Web</a>
-    </div>
-    """, unsafe_allow_html=True)
+    # "About this app" link
+    st.markdown(f"<a class='about-link' href='?page=about'>About this app</a>", unsafe_allow_html=True)
 
-    # SIDEBAR
-    st.sidebar.title("⚙️ Settings")
-    lang = st.sidebar.selectbox("🌐 Language", ["English", "Indonesia"])
+    # Sidebar Settings
+    st.sidebar.title("⚙️ Pengaturan")
+    lang = st.sidebar.selectbox("🌐 Bahasa", ["Indonesia", "English"])
 
     st.sidebar.markdown("---")
     st.sidebar.title("🎯 Mode Aplikasi")
@@ -148,48 +140,51 @@ def main():
 
     st.sidebar.markdown("### 📘 Panduan")
     if lang == "English":
-        st.sidebar.write("1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for result")
+        st.sidebar.write("1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for the result")
     else:
         st.sidebar.write("1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya")
 
-    # HEADER
+    # Header
     st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; font-size:18px;'>Empowering Smart Water Detection 🌊</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; font-size:16px; color:#0b2545;'>Web ini digunakan untuk mengklasifikasikan tingkat air dalam botol menjadi tiga kelas: <b>Full Water</b>, <b>Half Water</b>, dan <b>Overflowing</b>.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasi tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
 
-    # BOTOL AIR IMAGE
+    # Gambar Botol Air (tengah)
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
         st.markdown(f"""
-        <div style='display:flex; justify-content:center; align-items:center; margin:15px 0;'>
-            <img src='data:image/jpeg;base64,{encoded}' width='230' style='border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.4);'>
+        <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
+            <img src='data:image/jpeg;base64,{encoded}' width='220' style='border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);'>
         </div>
         """, unsafe_allow_html=True)
 
-    # CONTACT BUTTONS
+    # Info singkat dashboard
+    st.markdown("""
+    <div class='info-box'>
+        🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam **tiga kelas utama**:  
+        <b>Full Water</b> 💦, <b>Half Water</b> 💧, dan <b>Overflowing</b> 🚰.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Tombol kontak
     st.markdown(f"""
-    <div style="text-align:center; margin-bottom:20px;">
+    <div style="text-align:center; margin-top:25px;">
         <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
         <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
     </div>
     """, unsafe_allow_html=True)
 
-    # UPLOAD SECTION
-    st.markdown("<div style='display:flex; justify-content:center; margin-top:20px;'>", unsafe_allow_html=True)
+    # Upload Gambar
     uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
-    st.markdown("</div>", unsafe_allow_html=True)
-
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
         st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
         progress = st.progress(0)
-        for i in range(0, 101, 20):
+        for i in range(0, 101, 25):
             time.sleep(0.05)
             progress.progress(i)
 
         yolo, classifier = load_models()
-        result_img = None
 
         if "Object" in mode:
             st.subheader("🔍 Hasil Deteksi Objek" if lang == "Indonesia" else "🔍 Object Detection Result")
@@ -200,7 +195,6 @@ def main():
                     st.image(result_img, use_container_width=True)
             else:
                 st.error("❌ Model YOLO tidak ditemukan!" if lang == "Indonesia" else "❌ YOLO model not found!")
-
         else:
             st.subheader("🧠 Hasil Klasifikasi Gambar" if lang == "Indonesia" else "🧠 Image Classification Result")
             if classifier:
@@ -219,15 +213,46 @@ def main():
 
         progress.progress(100)
         st.success("✅ Selesai!" if lang == "Indonesia" else "✅ Done!")
-
     else:
         msg = "📘 Silakan unggah gambar terlebih dahulu." if lang == "Indonesia" else "📘 Please upload an image first."
         st.markdown(f"<div class='info-box'>{msg}</div>", unsafe_allow_html=True)
 
-    # FOOTER
+    # Footer
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<footer>© 2025 WaterVision — Powered by AI & Deep Learning 💧</footer>", unsafe_allow_html=True)
+    st.markdown("<footer>© 2025 WaterVision — Created by Vanissa Aulya Putri 💧</footer>", unsafe_allow_html=True)
 
 
+# ==============================
+# ABOUT PAGE
+# ==============================
+def about_page():
+    st.set_page_config(page_title="About — WaterVision", layout="centered")
+    add_custom_css()
+    st.markdown(f"<h1>About WaterVision</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='info-box' style='max-width:700px; margin:auto;'>
+        <p><b>WaterVision</b> adalah aplikasi berbasis AI yang dikembangkan untuk mendeteksi dan mengklasifikasikan tingkat air menggunakan teknologi <b>Deep Learning</b> dan <b>Computer Vision</b>.</p>
+        <p>Aplikasi ini mampu mengenali tiga kondisi utama air pada wadah:</p>
+        <ul style='text-align:left;'>
+            <li>💧 <b>Half Water</b> — air setengah penuh</li>
+            <li>💦 <b>Full Water</b> — air penuh</li>
+            <li>🚰 <b>Overflowing</b> — air meluap</li>
+        </ul>
+        <p>Tujuan pengembangan aplikasi ini adalah untuk mendukung sistem monitoring otomatis berbasis citra dalam pengelolaan air cerdas.</p>
+        <br>
+        <p><b>Developer:</b> Vanissa Aulya Putri<br>
+        <b>Email:</b> watervision@gmail.com</p>
+        <a href="/" style="display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">⬅ Back to Main</a>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ==============================
+# ROUTER
+# ==============================
 if __name__ == "__main__":
-    main()
+    query_params = st.query_params
+    if "page" in query_params and query_params["page"] == "about":
+        about_page()
+    else:
+        main()
