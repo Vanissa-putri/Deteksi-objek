@@ -24,15 +24,22 @@ HERO_IMAGE = "assets/botol_air.jpeg"
 # ADD CSS (DARK/LIGHT MODE + BG)
 # ==============================
 def add_css(dark_mode=False):
-    text_color = "#f5f5f5" if dark_mode else "#0e1b2b"
-    box_color = "rgba(30, 30, 30, 0.7)" if dark_mode else "rgba(255,255,255,0.8)"
-    bg_image = f"url('{BG_IMAGE}')" if os.path.exists(BG_IMAGE) else "none"
+    text_color = "#f9f9f9" if dark_mode else "#0e1b2b"
+    box_color = "rgba(40, 40, 40, 0.8)" if dark_mode else "rgba(255,255,255,0.9)"
+
+    if os.path.exists(BG_IMAGE):
+        with open(BG_IMAGE, "rb") as f:
+            base64_bg = base64.b64encode(f.read()).decode()
+        bg_image = f"url('data:image/jpg;base64,{base64_bg}')"
+    else:
+        bg_image = "none"
 
     st.markdown(f"""
     <style>
         .stApp {{
             background-image: {bg_image};
             background-size: cover;
+            background-position: center;
             background-attachment: fixed;
             color: {text_color};
         }}
@@ -45,7 +52,7 @@ def add_css(dark_mode=False):
             text-decoration: none;
             font-weight: bold;
             font-size: 14px;
-            margin-right: 5px;
+            margin-right: 6px;
             box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
         }}
         .whatsapp {{ background-color: #25d366; color: white; }}
@@ -139,10 +146,10 @@ def main():
         <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
     """, unsafe_allow_html=True)
 
-    # Hero Section (Botol Air)
+    # Hero Section (botol air)
     if os.path.exists(HERO_IMAGE):
         st.markdown("<div class='hero'>", unsafe_allow_html=True)
-        st.image(HERO_IMAGE, caption="WaterVision — Smart Vision for Every Drop 💧", use_column_width=True)
+        st.image(HERO_IMAGE, caption="WaterVision — Smart Vision for Every Drop 💧", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Upload Section
@@ -152,7 +159,7 @@ def main():
 
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
-        st.image(img, caption="📷 Uploaded Image", use_column_width=True)
+        st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
         progress = st.progress(0)
         for i in range(0, 101, 15):
@@ -168,7 +175,7 @@ def main():
                 with st.spinner("Detecting objects..." if lang == "English" else "Mendeteksi objek..."):
                     res = yolo(img)
                     result_img = Image.fromarray(res[0].plot())
-                    st.image(result_img, use_column_width=True)
+                    st.image(result_img, use_container_width=True)
                     st.markdown(download_link(result_img), unsafe_allow_html=True)
             else:
                 st.error("YOLO model not found!" if lang == "English" else "Model YOLO tidak ditemukan!")
