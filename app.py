@@ -17,7 +17,6 @@ EMAIL_WATERVISION = "watervision@gmail.com"
 BG_IMAGE = "assets/water_bg.jpg"
 BOTOL_IMAGE = "assets/botol_air.jpeg"
 
-
 # ==============================
 # CUSTOM STYLE
 # ==============================
@@ -119,7 +118,6 @@ def add_custom_css():
     </style>
     """, unsafe_allow_html=True)
 
-
 # ==============================
 # LOAD MODEL
 # ==============================
@@ -129,7 +127,6 @@ def load_models():
     keras_model = tf.keras.models.load_model(KERAS_MODEL_PATH) if os.path.exists(KERAS_MODEL_PATH) else None
     return yolo, keras_model
 
-
 # ==============================
 # MAIN PAGE
 # ==============================
@@ -137,23 +134,65 @@ def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
-    st.markdown(f"<a class='about-link' href='?page=about'>Tentang Web Ini</a>", unsafe_allow_html=True)
-
     st.sidebar.title("⚙️ Pengaturan")
     lang = st.sidebar.selectbox("🌐 Bahasa", ["Indonesia", "English"])
 
+    # ==========================
+    # TEXT DICTIONARY
+    # ==========================
+    if lang == "English":
+        title_text = "💧 WaterVision — Smart Water Classification"
+        subtitle_text = "Application for intelligent water level detection and classification 💧"
+        info_box_text = "🌊 This website detects and classifies water levels into three main classes: <b>Full Water</b> 💦, <b>Half Water</b> 💧, and <b>Overflowing</b> 🚰."
+        upload_text = "📤 Upload Image (JPG/PNG)"
+        mode_object = "Object Detection (YOLO)"
+        mode_classify = "Image Classification"
+        spinner_detecting = "Detecting objects..."
+        subheader_classification = "🧠 Image Classification Result"
+        detected_class_text = "✅ Detected Class"
+        done_text = "✅ Done!"
+        guide_text = "1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for the result"
+        about_link_text = "🔗 Learn More About This Web"
+        contact_whatsapp_text = "💬 WhatsApp"
+        contact_email_text = "✉ Gmail"
+        download_button_text = "📥 Download Result Image"
+        placeholder_no_image = "📘 Please upload an image first."
+        yolo_error_text = "❌ YOLO model not found!"
+        keras_error_text = "❌ Keras model not found!"
+    else:
+        title_text = "💧 WaterVision — Smart Water Classification"
+        subtitle_text = "Aplikasi untuk mendeteksi dan mengklasifikasikan tingkat air secara cerdas 💧"
+        info_box_text = "🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam tiga kelas utama: <b>Full Water</b> 💦, <b>Half Water</b> 💧, dan <b>Overflowing</b> 🚰."
+        upload_text = "📤 Unggah gambar (JPG/PNG)"
+        mode_object = "Deteksi Objek (YOLO)"
+        mode_classify = "Klasifikasi Gambar"
+        spinner_detecting = "Mendeteksi objek..."
+        subheader_classification = "🧠 Hasil Klasifikasi Gambar"
+        detected_class_text = "✅ Kelas terdeteksi"
+        done_text = "✅ Selesai!"
+        guide_text = "1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya"
+        about_link_text = "🔗 Pelajari Lebih Lanjut Tentang Web Ini"
+        contact_whatsapp_text = "💬 WhatsApp"
+        contact_email_text = "✉ Gmail"
+        download_button_text = "📥 Download Hasil Gambar"
+        placeholder_no_image = "📘 Silakan unggah gambar terlebih dahulu."
+        yolo_error_text = "❌ Model YOLO tidak ditemukan!"
+        keras_error_text = "❌ Model Keras tidak ditemukan!"
+
+    # ==========================
+    # SIDEBAR
+    # ==========================
     st.sidebar.markdown("---")
     st.sidebar.title("🎯 Mode Aplikasi")
-    mode = st.sidebar.radio("", ["Object Detection (YOLO)", "Image Classification"])
-
+    mode = st.sidebar.radio("", [mode_object, mode_classify])
     st.sidebar.markdown("### 📘 Panduan")
-    if lang == "English":
-        st.sidebar.write("1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for the result")
-    else:
-        st.sidebar.write("1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya")
+    st.sidebar.write(guide_text)
 
-    st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasikan tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
+    # ==========================
+    # MAIN CONTENT
+    # ==========================
+    st.markdown(f"<h1>{title_text}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align:center; font-size:18px;'>{subtitle_text}</p>", unsafe_allow_html=True)
 
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
@@ -163,25 +202,18 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class='info-box'>
-        🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam tiga kelas utama:  
-        <b>Full Water</b> 💦, <b>Half Water</b> 💧, dan <b>Overflowing</b> 🚰.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"<div class='info-box'>{info_box_text}</div>", unsafe_allow_html=True)
 
     st.markdown(f"""
     <div style="text-align:center; margin-top:25px;">
-        <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
-        <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
+        <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">{contact_whatsapp_text}</a>
+        <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">{contact_email_text}</a>
     </div>
     """, unsafe_allow_html=True)
 
-    uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+    uploaded = st.file_uploader(upload_text, type=["jpg", "jpeg", "png"])
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
-
-        # 🔹 Gambar upload jadi sedang (bukan full-width)
         st.image(img, caption="📷 Uploaded Image", width=450)
 
         progress = st.progress(0)
@@ -190,20 +222,19 @@ def main():
             progress.progress(i)
 
         yolo, classifier = load_models()
-
         result_img = None
 
         if "Object" in mode:
             st.subheader("🔍 Hasil Deteksi Objek" if lang == "Indonesia" else "🔍 Object Detection Result")
             if yolo:
-                with st.spinner("Mendeteksi objek..." if lang == "Indonesia" else "Detecting objects..."):
+                with st.spinner(spinner_detecting):
                     res = yolo(img)
                     result_img = Image.fromarray(res[0].plot())
                     st.image(result_img, use_container_width=False, width=450)
             else:
-                st.error("❌ Model YOLO tidak ditemukan!")
+                st.error(yolo_error_text)
         else:
-            st.subheader("🧠 Hasil Klasifikasi Gambar" if lang == "Indonesia" else "🧠 Image Classification Result")
+            st.subheader(subheader_classification)
             if classifier:
                 img_resized = img.resize((224, 224))
                 arr = keras_image.img_to_array(img_resized)
@@ -213,36 +244,35 @@ def main():
                 conf = np.max(pred)
                 classes = ["Half Water 💧", "Full Water 💦", "Overflowing 🚰"]
                 result_class = classes[class_idx] if class_idx < len(classes) else "Tidak Dikenal"
-                st.success(f"✅ Kelas terdeteksi: **{result_class}** (probabilitas {conf:.2%})")
+                st.success(f"{detected_class_text}: **{result_class}** (probabilitas {conf:.2%})")
                 result_img = img.copy().resize((400, 400))
             else:
-                st.error("❌ Model Keras tidak ditemukan!")
+                st.error(keras_error_text)
 
         progress.progress(100)
 
-        st.markdown("<div style='text-align:center; margin-top:15px;'><div class='highlight-box'>✅ Selesai!</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center; margin-top:15px;'><div class='highlight-box'>{done_text}</div></div>", unsafe_allow_html=True)
 
         if result_img:
             buf = io.BytesIO()
             result_img.save(buf, format="PNG")
             byte_im = buf.getvalue()
-            st.download_button("📥 Download Hasil Gambar", data=byte_im, file_name="hasil_watervision.png", mime="image/png")
+            st.download_button(download_button_text, data=byte_im, file_name="hasil_watervision.png", mime="image/png")
 
-        st.markdown("""
+        st.markdown(f"""
         <div style='text-align:center; margin-top:25px;'>
             <div class='highlight-box'>
                 <a href='?page=about' style='color:#007acc; text-decoration:none; font-weight:600;'>
-                🔗 Pelajari Lebih Lanjut Tentang Web Ini
+                {about_link_text}
                 </a>
             </div>
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-box'>{placeholder_no_image}</div>", unsafe_allow_html=True)
 
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<footer>© 2025 WaterVision — Created by Vanissa Aulya Putri 💧</footer>", unsafe_allow_html=True)
-
+    st.markdown(f"<footer>© 2025 WaterVision — Created by Vanissa Aulya Putri 💧</footer>", unsafe_allow_html=True)
 
 # ==============================
 # ABOUT PAGE
@@ -250,9 +280,27 @@ def main():
 def about_page():
     st.set_page_config(page_title="About — WaterVision", layout="centered")
     add_custom_css()
-    st.markdown("<h1>🌐 Tentang WaterVision</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class='info-box' style='max-width:700px; margin:auto;'>
+    lang = st.sidebar.selectbox("🌐 Bahasa", ["Indonesia", "English"], index=0)
+
+    if lang == "English":
+        title_text = "🌐 About WaterVision"
+        content_text = """
+        <p><b>WaterVision</b> is an AI-based application developed to detect and classify water levels using <b>Deep Learning</b> and <b>Computer Vision</b> technologies.</p>
+        <p>The application recognizes three main water conditions in containers:</p>
+        <ul style='text-align:left;'>
+            <li>💧 <b>Half Water</b> — half-full water</li>
+            <li>💦 <b>Full Water</b> — full water</li>
+            <li>🚰 <b>Overflowing</b> — overflowing water</li>
+        </ul>
+        <p>This website helps users perform automated visual monitoring.</p>
+        <br>
+        <p><b>Developer:</b> Vanissa Aulya Putri<br>
+        <b>Email:</b> watervision@gmail.com</p>
+        """
+        back_text = "⬅ Back to Home Page"
+    else:
+        title_text = "🌐 Tentang WaterVision"
+        content_text = """
         <p><b>WaterVision</b> adalah aplikasi berbasis AI yang dikembangkan untuk mendeteksi dan mengklasifikasikan tingkat air menggunakan teknologi <b>Deep Learning</b> dan <b>Computer Vision</b>.</p>
         <p>Aplikasi ini mengenali tiga kondisi utama air pada wadah:</p>
         <ul style='text-align:left;'>
@@ -264,10 +312,12 @@ def about_page():
         <br>
         <p><b>Developer:</b> Vanissa Aulya Putri<br>
         <b>Email:</b> watervision@gmail.com</p>
-        <a href="/" style="display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">⬅ Kembali ke Halaman Utama</a>
-    </div>
-    """, unsafe_allow_html=True)
+        """
+        back_text = "⬅ Kembali ke Halaman Utama"
 
+    st.markdown(f"<h1>{title_text}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<div class='info-box' style='max-width:700px; margin:auto;'>{content_text}</div>", unsafe_allow_html=True)
+    st.markdown(f"<a href='/' style='display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;'>{back_text}</a>", unsafe_allow_html=True)
 
 # ==============================
 # ROUTER
