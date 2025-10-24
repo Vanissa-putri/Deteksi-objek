@@ -98,6 +98,16 @@ def add_custom_css():
         .about-link:hover {{
             background-color: rgba(0, 120, 200, 1);
         }}
+        .highlight-box {{
+            text-align:center;
+            background-color: rgba(255,255,255,0.9);
+            padding: 10px 18px;
+            border-radius: 10px;
+            display:inline-block;
+            box-shadow:0 3px 8px rgba(0,0,0,0.2);
+            margin-top:10px;
+            font-weight:600;
+        }}
         footer {{
             text-align: center;
             color: white;
@@ -211,10 +221,21 @@ def main():
                 st.error("❌ Model Keras tidak ditemukan!")
 
         progress.progress(100)
-        st.success("✅ Selesai!" if lang == "Indonesia" else "✅ Done!")
 
-        # 🔗 Tambahan link pelajari lebih lanjut
-        st.markdown("<div style='text-align:center; margin-top:20px;'><a href='?page=about' style='color:#007acc; font-weight:600;'>🔗 Pelajari Lebih Lanjut Tentang Web Ini</a></div>", unsafe_allow_html=True)
+        # ✅ tampilan hasil selesai dibuat lebih jelas
+        st.markdown("<div style='text-align:center; margin-top:15px;'><div class='highlight-box'>✅ Selesai!</div></div>", unsafe_allow_html=True)
+
+        # 🔗 link pelajari lebih lanjut dengan background putih
+        st.markdown("""
+        <div style='text-align:center; margin-top:25px;'>
+            <div class='highlight-box'>
+                <a href='?page=about' style='color:#007acc; text-decoration:none; font-weight:600;'>
+                🔗 Pelajari Lebih Lanjut Tentang Web Ini
+                </a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
     else:
         st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
 
