@@ -7,19 +7,19 @@ from PIL import Image
 import base64, os, time
 
 # ==============================
-# CONFIGURATIONS
+# CONFIG
 # ==============================
 APP_TITLE = "💧 WaterVision — Smart Water Classification"
 YOLO_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 4.pt"
 KERAS_MODEL_PATH = "model/Vanissa Aulya Putri_Laporan 2.h5"
-WHATSAPP_NUMBER = "6282245357681"
-EMAIL_WATERVISION = "watervision@gmail.com"
 BG_IMAGE = "assets/water_bg.jpg"
 BOTOL_IMAGE = "assets/botol_air.jpeg"
+WHATSAPP_NUMBER = "6282245357681"
+EMAIL_WATERVISION = "watervision@gmail.com"
 
 
 # ==============================
-# CUSTOM STYLE
+# STYLE
 # ==============================
 def add_custom_css():
     bg = ""
@@ -43,35 +43,6 @@ def add_custom_css():
             font-weight: 700;
             text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
         }}
-        h2, h3, h4 {{
-            color: #052c48;
-        }}
-        .stButton>button {{
-            background: linear-gradient(90deg, #0099ff, #33bbff);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 0.6em 1.2em;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-        }}
-        .stButton>button:hover {{
-            background: linear-gradient(90deg, #007acc, #1ebfff);
-            transform: scale(1.05);
-        }}
-        .contact-btn {{
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            margin-right: 6px;
-            box-shadow: 0px 3px 6px rgba(0,0,0,0.25);
-            transition: 0.2s ease;
-        }}
-        .whatsapp {{ background-color: #25d366; color: white; }}
-        .gmail {{ background-color: #d93025; color: white; }}
-        .contact-btn:hover {{ opacity: 0.85; }}
         .info-box {{
             text-align: center;
             padding: 15px;
@@ -98,36 +69,23 @@ def add_custom_css():
         .about-link:hover {{
             background-color: rgba(0, 120, 200, 1);
         }}
-        .learn-link {{
-            display: block;
-            text-align: center;
-            margin-top: 15px;
+        .done-box {{
+            text-align:center;
+            background-color: rgba(255,255,255,0.85);
+            color: #0066cc;
             font-weight: 600;
-            font-size: 15px;
-        }}
-        .learn-link a {{
-            color: #007acc;
-            text-decoration: none;
-            transition: 0.2s;
-        }}
-        .learn-link a:hover {{
-            color: #004c7d;
-            text-decoration: underline;
-        }}
-        footer {{
-            text-align: center;
-            color: white;
-            background-color: rgba(0, 0, 0, 0.45);
-            border-radius: 8px;
-            padding: 8px;
-            margin-top: 30px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: fit-content;
+            margin: 15px auto;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         }}
     </style>
     """, unsafe_allow_html=True)
 
 
 # ==============================
-# LOAD MODEL
+# LOAD MODELS
 # ==============================
 @st.cache_resource
 def load_models():
@@ -143,34 +101,22 @@ def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
-    st.markdown(f"<a class='about-link' href='?page=about'>About this app</a>", unsafe_allow_html=True)
+    st.markdown(f"<a class='about-link' href='?page=about'>Tentang Web Ini</a>", unsafe_allow_html=True)
 
-    # Sidebar Settings
     st.sidebar.title("⚙️ Pengaturan")
     lang = st.sidebar.selectbox("🌐 Bahasa", ["Indonesia", "English"])
-
     st.sidebar.markdown("---")
     st.sidebar.title("🎯 Mode Aplikasi")
     mode = st.sidebar.radio("", ["Object Detection (YOLO)", "Image Classification"])
-
     st.sidebar.markdown("### 📘 Panduan")
     if lang == "English":
         st.sidebar.write("1️⃣ Choose mode\n2️⃣ Upload an image (JPG/PNG)\n3️⃣ Wait for the result")
     else:
         st.sidebar.write("1️⃣ Pilih mode\n2️⃣ Unggah gambar (JPG/PNG)\n3️⃣ Tunggu hasilnya")
 
-    # Header
     st.markdown(f"<h1>{APP_TITLE}</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasi tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-size:18px;'>Aplikasi untuk mendeteksi dan mengklasifikasikan tingkat air secara cerdas 💧</p>", unsafe_allow_html=True)
 
-    # Link “Tentang Web Ini”
-    st.markdown("""
-    <div class='learn-link'>
-        🔗 <a href='?page=about'>Pelajari lebih lanjut tentang WaterVision</a>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Gambar Botol Air (tengah)
     if os.path.exists(BOTOL_IMAGE):
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
         st.markdown(f"""
@@ -179,7 +125,6 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    # Info singkat dashboard
     st.markdown("""
     <div class='info-box'>
         🌊 Website ini digunakan untuk mendeteksi dan mengklasifikasikan tingkat air ke dalam tiga kelas utama:  
@@ -187,19 +132,12 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Tombol kontak
-    st.markdown(f"""
-    <div style="text-align:center; margin-top:25px;">
-        <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
-        <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Upload Gambar
     uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
-        st.image(img, caption="📷 Uploaded Image", use_container_width=True)
+        st.markdown("<div style='text-align:center;'>", unsafe_allow_html=True)
+        st.image(img, caption="📷 Uploaded Image", width=350)  # <<< ukuran sedang
+        st.markdown("</div>", unsafe_allow_html=True)
 
         progress = st.progress(0)
         for i in range(0, 101, 25):
@@ -209,16 +147,18 @@ def main():
         yolo, classifier = load_models()
 
         if "Object" in mode:
-            st.subheader("🔍 Hasil Deteksi Objek" if lang == "Indonesia" else "🔍 Object Detection Result")
+            st.subheader("🔍 Hasil Deteksi Objek")
             if yolo:
-                with st.spinner("Mendeteksi objek..." if lang == "Indonesia" else "Detecting objects..."):
+                with st.spinner("Mendeteksi objek..."):
                     res = yolo(img)
                     result_img = Image.fromarray(res[0].plot())
-                    st.image(result_img, use_container_width=True)
+                    st.markdown("<div style='text-align:center;'>", unsafe_allow_html=True)
+                    st.image(result_img, caption="Hasil Deteksi", width=350)
+                    st.markdown("</div>", unsafe_allow_html=True)
             else:
-                st.error("❌ Model YOLO tidak ditemukan!" if lang == "Indonesia" else "❌ YOLO model not found!")
+                st.error("❌ Model YOLO tidak ditemukan!")
         else:
-            st.subheader("🧠 Hasil Klasifikasi Gambar" if lang == "Indonesia" else "🧠 Image Classification Result")
+            st.subheader("🧠 Hasil Klasifikasi Gambar")
             if classifier:
                 img_resized = img.resize((224, 224))
                 arr = keras_image.img_to_array(img_resized)
@@ -226,20 +166,18 @@ def main():
                 pred = classifier.predict(arr)
                 class_idx = np.argmax(pred)
                 conf = np.max(pred)
-                if lang == "English":
-                    st.success(f"✅ Predicted class: **{class_idx}** (confidence {conf:.2%})")
-                else:
-                    st.success(f"✅ Kelas terdeteksi: **{class_idx}** (probabilitas {conf:.2%})")
+                classes = ["Half Water 💧", "Full Water 💦", "Overflowing 🚰"]
+                result_class = classes[class_idx] if class_idx < len(classes) else "Tidak Dikenal"
+                st.success(f"✅ Kelas terdeteksi: **{result_class}** (probabilitas {conf:.2%})")
             else:
-                st.error("❌ Model Keras tidak ditemukan!" if lang == "Indonesia" else "❌ Keras model not found!")
+                st.error("❌ Model Keras tidak ditemukan!")
 
         progress.progress(100)
-        st.success("✅ Selesai!" if lang == "Indonesia" else "✅ Done!")
+        st.markdown("<div class='done-box'>✅ Selesai!</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; margin-top:10px;'><a href='?page=about' style='color:#007acc; font-weight:600;'>ℹ Lihat Tentang Web Ini</a></div>", unsafe_allow_html=True)
     else:
-        msg = "📘 Silakan unggah gambar terlebih dahulu." if lang == "Indonesia" else "📘 Please upload an image first."
-        st.markdown(f"<div class='info-box'>{msg}</div>", unsafe_allow_html=True)
+        st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
 
-    # Footer
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<footer>© 2025 WaterVision — Created by Vanissa Aulya Putri 💧</footer>", unsafe_allow_html=True)
 
@@ -250,21 +188,21 @@ def main():
 def about_page():
     st.set_page_config(page_title="About — WaterVision", layout="centered")
     add_custom_css()
-    st.markdown(f"<h1>About WaterVision</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>🌐 Tentang WaterVision</h1>", unsafe_allow_html=True)
     st.markdown("""
     <div class='info-box' style='max-width:700px; margin:auto;'>
         <p><b>WaterVision</b> adalah aplikasi berbasis AI yang dikembangkan untuk mendeteksi dan mengklasifikasikan tingkat air menggunakan teknologi <b>Deep Learning</b> dan <b>Computer Vision</b>.</p>
-        <p>Aplikasi ini mampu mengenali tiga kondisi utama air pada wadah:</p>
+        <p>Aplikasi ini mengenali tiga kondisi utama air pada wadah:</p>
         <ul style='text-align:left;'>
             <li>💧 <b>Half Water</b> — air setengah penuh</li>
             <li>💦 <b>Full Water</b> — air penuh</li>
             <li>🚰 <b>Overflowing</b> — air meluap</li>
         </ul>
-        <p>Tujuan utama pengembangan aplikasi ini adalah untuk mendukung sistem monitoring otomatis berbasis citra dalam pengelolaan air cerdas dan efisien.</p>
+        <p>Website ini dibuat untuk membantu pengguna dalam melakukan pengawasan otomatis berbasis citra visual, terutama di bidang pengelolaan air dan sistem sensor cerdas.</p>
         <br>
         <p><b>Developer:</b> Vanissa Aulya Putri<br>
         <b>Email:</b> watervision@gmail.com</p>
-        <a href="/" style="display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">⬅ Kembali ke Dashboard</a>
+        <a href="/" style="display:inline-block;margin-top:15px;background:#0099ff;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;">⬅ Kembali ke Halaman Utama</a>
     </div>
     """, unsafe_allow_html=True)
 
