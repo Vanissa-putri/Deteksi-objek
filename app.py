@@ -43,6 +43,35 @@ def add_custom_css():
             font-weight: 700;
             text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
         }}
+        h2, h3, h4 {{
+            color: #052c48;
+        }}
+        .stButton>button {{
+            background: linear-gradient(90deg, #0099ff, #33bbff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.6em 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        }}
+        .stButton>button:hover {{
+            background: linear-gradient(90deg, #007acc, #1ebfff);
+            transform: scale(1.05);
+        }}
+        .contact-btn {{
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-right: 6px;
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.25);
+            transition: 0.2s ease;
+        }}
+        .whatsapp {{ background-color: #25d366; color: white; }}
+        .gmail {{ background-color: #d93025; color: white; }}
+        .contact-btn:hover {{ opacity: 0.85; }}
         .info-box {{
             text-align: center;
             padding: 15px;
@@ -50,18 +79,7 @@ def add_custom_css():
             border-radius: 10px;
             margin-top: 25px;
             font-weight: 500;
-        }}
-        .done-box {{
-            text-align:center;
-            background-color: rgba(255,255,255,0.95);
-            color:#007acc;
-            font-weight:600;
-            font-size:16px;
-            border-radius:10px;
-            padding:10px 20px;
-            width:fit-content;
-            margin:20px auto;
-            box-shadow:0 2px 6px rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
         }}
         .about-link {{
             position: fixed;
@@ -109,6 +127,7 @@ def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     add_custom_css()
 
+    # Link ke halaman about
     st.markdown(f"<a class='about-link' href='?page=about'>Tentang Web Ini</a>", unsafe_allow_html=True)
 
     # Sidebar
@@ -134,7 +153,7 @@ def main():
         encoded = base64.b64encode(open(BOTOL_IMAGE, "rb").read()).decode()
         st.markdown(f"""
         <div style='display:flex; justify-content:center; align-items:center; margin:20px 0;'>
-            <img src='data:image/jpeg;base64,{encoded}' width='220' style='border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);'>
+            <img src='data:image/jpeg;base64,{encoded}' width='200' style='border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);'>
         </div>
         """, unsafe_allow_html=True)
 
@@ -146,14 +165,19 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
+    # Tombol kontak
+    st.markdown(f"""
+    <div style="text-align:center; margin-top:25px;">
+        <a class="contact-btn whatsapp" href="https://wa.me/{WHATSAPP_NUMBER}" target="_blank">💬 WhatsApp</a>
+        <a class="contact-btn gmail" href="mailto:{EMAIL_WATERVISION}" target="_blank">✉ Gmail</a>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Upload
     uploaded = st.file_uploader("📤 Upload Image (JPG/PNG)", type=["jpg", "jpeg", "png"])
     if uploaded:
         img = Image.open(uploaded).convert("RGB")
-
-        # tampilkan gambar upload dengan ukuran sedang dan background putih
-        st.markdown("<div style='text-align:center; background-color:rgba(255,255,255,0.9); padding:15px; border-radius:10px; display:inline-block;'>", unsafe_allow_html=True)
-        st.image(img, caption="📷 Gambar Diupload", width=300)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
         progress = st.progress(0)
         for i in range(0, 101, 25):
@@ -168,9 +192,7 @@ def main():
                 with st.spinner("Mendeteksi objek..." if lang == "Indonesia" else "Detecting objects..."):
                     res = yolo(img)
                     result_img = Image.fromarray(res[0].plot())
-                    st.markdown("<div style='text-align:center; background-color:rgba(255,255,255,0.9); padding:15px; border-radius:10px; display:inline-block;'>", unsafe_allow_html=True)
-                    st.image(result_img, caption="🔎 Hasil Deteksi", width=300)
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    st.image(result_img, use_container_width=False, width=450)
             else:
                 st.error("❌ Model YOLO tidak ditemukan!" if lang == "Indonesia" else "❌ YOLO model not found!")
         else:
@@ -189,8 +211,10 @@ def main():
                 st.error("❌ Model Keras tidak ditemukan!")
 
         progress.progress(100)
-        st.markdown("<div class='done-box'>✅ Selesai!</div>", unsafe_allow_html=True)
+        st.success("✅ Selesai!" if lang == "Indonesia" else "✅ Done!")
 
+        # 🔗 Tambahan link pelajari lebih lanjut
+        st.markdown("<div style='text-align:center; margin-top:20px;'><a href='?page=about' style='color:#007acc; font-weight:600;'>🔗 Pelajari Lebih Lanjut Tentang Web Ini</a></div>", unsafe_allow_html=True)
     else:
         st.markdown("<div class='info-box'>📘 Silakan unggah gambar terlebih dahulu.</div>", unsafe_allow_html=True)
 
